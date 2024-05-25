@@ -1,0 +1,60 @@
+version:  '2'
+services:
+
+  master:
+    image: bigdata-plat
+    container_name: master
+    ports:
+      - "222:22"       # ssh port
+      - "2181:2181"    # Zookeeper port
+      - "8040:4040"
+      - "8042:4042"
+      - "8080:8080"    # Spark port
+      - "9000:9000"    # HDFS port
+      - "9001:9001"    # HDFS
+      - "9083:9083"
+      - "10000:10000"  # Hive port
+      - "10002:10002"
+      - "13562:13562"
+      - "50010:50010"
+      - "50020:50020"
+      - "50070:50070"  # Hadoop WEB UI
+      - "50075:50075"
+    hostname: master
+    depends_on:
+      - metadata
+    environment:
+      ZK_ID: 1
+      ROLE: master
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=master:2888:3888
+    tty: true
+    stdin_open: true
+    platform: linux/amd64
+
+  slave1:
+    image: bigdata-plat
+    container_name: slave1
+    hostname: slave1
+    depends_on:
+      - master
+    environment:
+      ZK_ID: 2
+      ROLE: slave
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=master:2888:3888 server.2=slave1:2888:3888
+    tty: true
+    stdin_open: true
+    platform: linux/amd64
+
+  metadata:
+    image: "postgres:9.6.12"
+    container_name: metadata
+    hostname: metadata
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_USER=root
+      - POSTGRES_DB=metastore
+    restart: always
